@@ -60,7 +60,8 @@ def Psi_x(state,t_list,t1,t2,t3,echo=False):
 def dPsi_x(state,t_list,t1,t2,t3,echo=False):
     N = state.shape[0]
     dim = t1.shape[1]
-    dpsi = np.zeros((N,N,dim,dim))
+    dpsi = np.zeros((N,dim))
+    dpsi_2 = np.zeros((N,N,dim,dim))
     dpsi_3 = np.zeros(t3.shape)
     t1_coef = []
     sites = []
@@ -76,7 +77,7 @@ def dPsi_x(state,t_list,t1,t2,t3,echo=False):
     nexcit = len(sites)    
 
     if(nexcit == 0):
-        return weight,dpsi,dpsi_3
+        return weight,dpsi,dpsi_2, dpsi_3
     
     t2_coef = np.zeros((nexcit,nexcit))
     t3_coef = np.zeros((nexcit,nexcit,nexcit))
@@ -92,16 +93,18 @@ def dPsi_x(state,t_list,t1,t2,t3,echo=False):
     if(nexcit < 3):
         weight,dpsi1,dpsi2,dpsi3 = diagrams.derivs_from_list(t_list[nexcit-1],t1_coef,t2_coef,t3_coef)
         for i in range(nexcit):
-            dpsi[0,0,state[sites[i]],state[sites[i]]] += dpsi1[i]
+            # dpsi[0,0,state[sites[i]],state[sites[i]]] += dpsi1[i]
+            dpsi[0,state[sites[i]]] += dpsi1[i]
+
             for j in range(nexcit):
                 dist = (abs(sites[i]-sites[j]))
 #                dist = dist - (2*dist//N)
                 if(dist > N//2):
                     dist = N-dist
 #                dpsi[0,abs(dist),state[sites[i]],state[sites[j]]] += dpsi2[i,j]
-                dpsi[sites[i],sites[j],state[sites[i]],state[sites[j]]] += dpsi2[i,j]
+                dpsi_2[sites[i],sites[j],state[sites[i]],state[sites[j]]] += dpsi2[i,j]
 
-        return weight,dpsi,dpsi_3
+        return weight,dpsi,dpsi_2, dpsi_3
 
     t3_coef = np.zeros((nexcit,nexcit,nexcit))
     for i in range(nexcit):
@@ -136,4 +139,5 @@ def dPsi_x(state,t_list,t1,t2,t3,echo=False):
                 dpsi_3[sites[i],sites[j],sites[k],state[sites[i]],state[sites[j]],state[sites[k]]] += dpsi3[i,j,k]
 
 
-    return weight,dpsi,dpsi_3
+    return weight,dpsi,dpsi_2,dpsi_3
+

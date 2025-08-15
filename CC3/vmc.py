@@ -353,30 +353,42 @@ def generate_constrained_basis(CC,t1,t2,t3,nstates):
 def metropolis_constrained(CC,basis,t1,t2,t3,niter,ndecorr,calc_derivs=False):
     ref_state = np.zeros(CC.N,dtype='int')
     Ex_list = []
+    
     psi_list = []
     dpsi_list = []
     Hdpsi_list = []
+    dpsi2_list = []
+    Hdpsi2_list = []
     dpsi3_list = []
     Hdpsi3_list = []
 
     for state in basis:
         psi_list += [wf.Psi_x(state,CC.t_list,t1,t2,t3)**2]
-        Ex,Hdpsi,Hdpsi3,dpsi,dpsi3 = model.HO(CC.model,state,CC.t_list,t1,t2,t3,level*2)
+        # Ex,Hdpsi,Hdpsi3,dpsi,dpsi3 = model.HO(CC.model,state,CC.t_list,t1,t2,t3,level*2)
+        Ex,Hdpsi,Hdpsi2, Hdpsi3,dpsi,dpsi2,dpsi3 = model_custom.HO(CC.model,state,CC.t_list,t1,t2,t3,level*2)
         Ex_list += [Ex]
         Hdpsi_list += [Hdpsi]
         dpsi_list += [dpsi]
+        Hdpsi2_list += [Hdpsi2]
+        dpsi2_list += [dpsi2]
         Hdpsi3_list += [Hdpsi3]
         dpsi3_list += [dpsi3]
     
     Ex = 0.
     N = CC.model.N
     dim = CC.model.dim
-    dpsi = np.zeros((N,N,dim,dim))
-    Hdpsi = np.zeros((N,N,dim,dim))
+
+    dpsi = np.zeros((N,dim))
+    Hdpsi = np.zeros((N,dim))
+    dpsi2 = np.zeros((N,N,dim,dim))
+    Hdpsi2 = np.zeros((N,N,dim,dim))
     dpsi3 = np.zeros((N,N,N,dim,dim,dim))
     Hdpsi3 = np.zeros((N,N,N,dim,dim,dim))
-    aux_dpsi = np.zeros((N,N,dim,dim))
-    aux_Hdpsi = np.zeros((N,N,dim,dim))
+    
+    aux_dpsi = np.zeros((N,dim))
+    aux_Hdpsi = np.zeros((N,dim))
+    aux_dpsi2 = np.zeros((N,N,dim,dim))
+    aux_Hdpsi2 = np.zeros((N,N,dim,dim))
     aux_dpsi3 = np.zeros((N,N,N,dim,dim,dim))
     aux_Hdpsi3 = np.zeros((N,N,N,dim,dim,dim))
 
@@ -405,24 +417,31 @@ def metropolis_constrained(CC,basis,t1,t2,t3,niter,ndecorr,calc_derivs=False):
         if(calc_derivs):            
             Hdpsi += Hdpsi_list[old_state]
             dpsi += dpsi_list[old_state]
+            Hdpsi2 += Hdpsi2_list[old_state]
+            dpsi2 += dpsi2_list[old_state]
             Hdpsi3 += Hdpsi3_list[old_state]
             dpsi3 += dpsi3_list[old_state]
 
         res += [Ex_list[old_state]] 
 
     CC.state = basis[old_state]
-    return res,Hdpsi/niter,Hdpsi3/niter,dpsi/niter,dpsi3/niter
+    return res,Hdpsi/niter,Hdpsi2/niter, Hdpsi3/niter,dpsi/niter,dpsi2/niter,dpsi3/niter
 
 
 def metropolis_constrained_orig(CC,t1,t2,t3,niter,ndecorr,level=1,calc_derivs=False):
     ref_state = np.zeros(CC.N,dtype='int')
     aux_basis = [ref_state]
     Ex_list = []
+    
     psi_list = []
     dpsi_list = []
     Hdpsi_list = []
+    dpsi2_list = []
+    Hdpsi2_list = []
     dpsi3_list = []
     Hdpsi3_list = []
+
+    states_list = []
 
     Hx = model.apply_H(CC.model,ref_state)
 
@@ -457,10 +476,12 @@ def metropolis_constrained_orig(CC,t1,t2,t3,niter,ndecorr,level=1,calc_derivs=Fa
 
     for state in aux_basis:
         psi_list += [wf.Psi_x(state,CC.t_list,t1,t2,t3)**2]
-        Ex,Hdpsi,Hdpsi3,dpsi,dpsi3 = model.HO(CC.model,state,CC.t_list,t1,t2,t3,level*2)
+        Ex,Hdpsi,Hdpsi2, Hdpsi3,dpsi,dpsi2,dpsi3 = model_custom.HO(CC.model,state,CC.t_list,t1,t2,t3,level*2)
         Ex_list += [Ex]
         Hdpsi_list += [Hdpsi]
         dpsi_list += [dpsi]
+        Hdpsi2_list += [Hdpsi2]
+        dpsi2_list += [dpsi2]
         Hdpsi3_list += [Hdpsi3]
         dpsi3_list += [dpsi3]
     
@@ -471,12 +492,19 @@ def metropolis_constrained_orig(CC,t1,t2,t3,niter,ndecorr,level=1,calc_derivs=Fa
     Ex = 0.
     N = CC.model.N
     dim = CC.model.dim
-    dpsi = np.zeros((N,N,dim,dim))
-    Hdpsi = np.zeros((N,N,dim,dim))
+    dpsi = np.zeros((N,dim))
+    Hdpsi = np.zeros((N,dim))
+
+    dpsi2 = np.zeros((N,N,dim,dim))
+    Hdpsi2 = np.zeros((N,N,dim,dim))
+
     dpsi3 = np.zeros((N,N,N,dim,dim,dim))
     Hdpsi3 = np.zeros((N,N,N,dim,dim,dim))
-    aux_dpsi = np.zeros((N,N,dim,dim))
-    aux_Hdpsi = np.zeros((N,N,dim,dim))
+    
+    aux_dpsi = np.zeros((N,dim))
+    aux_Hdpsi = np.zeros((N,dim))
+    aux_dpsi2 = np.zeros((N,N,dim,dim))
+    aux_Hdpsi2 = np.zeros((N,N,dim,dim))
     aux_dpsi3 = np.zeros((N,N,N,dim,dim,dim))
     aux_Hdpsi3 = np.zeros((N,N,N,dim,dim,dim))
 
@@ -505,12 +533,13 @@ def metropolis_constrained_orig(CC,t1,t2,t3,niter,ndecorr,level=1,calc_derivs=Fa
         if(calc_derivs):            
             Hdpsi += Hdpsi_list[old_state]
             dpsi += dpsi_list[old_state]
+            Hdpsi2 += Hdpsi2_list[old_state]
+            dpsi2 += dpsi2_list[old_state]
             Hdpsi3 += Hdpsi3_list[old_state]
             dpsi3 += dpsi3_list[old_state]
 
         res += [Ex_list[old_state]] 
+        states_list += [aux_basis[old_state]]
 
     CC.state = aux_basis[old_state]
-    return res,Hdpsi/niter,Hdpsi3/niter,dpsi/niter,dpsi3/niter
-
-
+    return res,Hdpsi/niter,Hdpsi2/niter, Hdpsi3/niter,dpsi/niter,dpsi2/niter,dpsi3/niter

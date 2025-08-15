@@ -180,8 +180,8 @@ def metropolis_constrained(CC,t1,t2,t3,niter,ndecorr,level=1,calc_derivs=False):
     ref_state = np.zeros(CC.N,dtype='int')
     aux_basis = [ref_state]
     Ex_list = []
+    
     psi_list = []
-
     dpsi_list = []
     Hdpsi_list = []
     dpsi2_list = []

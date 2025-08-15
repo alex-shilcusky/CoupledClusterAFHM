@@ -131,13 +131,16 @@ def apply_H(H,state,diagonal=True):
 def HO(H,state,t_list,t1,t2,t3,nmax=-1):
     N = H.N
     dim = H.dim
-    Hdpsi = np.zeros((N,N,dim,dim))
+    # Hdpsi = np.zeros((N,N,dim,dim))
+    Hdpsi = np.zeros((N,dim))
+    Hdpsi2 = np.zeros((N,N,dim,dim))
     Hdpsi3 = np.zeros((N,N,N,dim,dim,dim))
 
     Hx = apply_H(H,state)
-    psi,dpsi,dpsi3 = wf.dPsi_x(state,t_list,t1,t2,t3)
+    psi,dpsi,dpsi2, dpsi3 = wf.dPsi_x(state,t_list,t1,t2,t3)
 
     dpsi /= psi
+    dpsi2 /= psi
     dpsi3 /= psi
 
     E = 0.
@@ -161,10 +164,12 @@ def HO(H,state,t_list,t1,t2,t3,nmax=-1):
                 E += coef*psix
 
     E /= psi
-    Hdpsi[:,:,:,:] = E*dpsi[:,:,:,:]
+    Hdpsi[:,:] = E*dpsi[:,:]
+    Hdpsi2[:,:,:,:] = E*dpsi2[:,:,:,:]
     Hdpsi3[:,:,:,:,:,:] = E*dpsi3[:,:,:,:,:,:]
 
-    return E,Hdpsi,Hdpsi3,dpsi,dpsi3
+    return E,Hdpsi,Hdpsi2, Hdpsi3,dpsi,dpsi2,dpsi3
+
 
 def energy(H,state,t_list,t1,t2,t3):
     Hx = apply_H(H,state)
